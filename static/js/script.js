@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     // Define the start date and time
-    const startDate = new Date("2024-06-23T16:50:00").getTime();
+    const startDate = new Date("2024-06-24T10:30:00").getTime();
     
     // Define the target date and time
-    const targetDate = new Date("2024-10-19T00:00:00").getTime();
+    const targetDate = new Date("2024-10-19T10:33:00").getTime();
 
     // Calculate the total duration from the start date to the target date
     const totalDuration = targetDate - startDate;
@@ -27,13 +27,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const timePassed = now - startDate;
         const percentagePassed = (timePassed / totalDuration) * 100;
 
-        const scaleFactor = 1 + (percentagePassed / 100);
+        const scaleFactor = 1 + (percentagePassed / 100 * 5);
         document.getElementById('background-image').style.transform = `scale(${scaleFactor})`;
 
         // If the countdown is over, display a message
         if (distance < 0) {
             clearInterval(countdown);
-            document.getElementById("countdown").innerHTML = "EXPIRED";
+            document.getElementById("countdown").innerHTML = "¡LLEGO!";
             document.getElementById('background-image').style.transform = 'scale(1)'; // Final size
         }
     };
