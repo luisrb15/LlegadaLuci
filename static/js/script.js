@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const timePassed = now - startDate;
         const percentagePassed = (timePassed / totalDuration) * 100;
 
-        const scaleFactor = 1 + (percentagePassed / 100 * 5);
+        const scaleFactor = 1 + (percentagePassed / 100 * 6);
         document.getElementById('background-image').style.transform = `scale(${scaleFactor})`;
 
         // If the countdown is over, display a message
