@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     // Define the start date and time
-    const startDate = new Date("2024-06-24T10:30:00").getTime();
+    const startDate = new Date("2025-09-27T10:30:00").getTime();
     
     // Define the target date and time
     const targetDate = new Date("2024-10-19T00:00:00").getTime();
