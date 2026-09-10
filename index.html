@@ -4,208 +4,469 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Llegada de Luci</title>
-    <link rel="icon" href="static/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="static/img/favicon.jpg" type="image/jpeg">
     <style>
-        body, html {
+        * { box-sizing: border-box; }
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #1a1a1a;
+            background-color: #000;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        #scene {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 20%, #0d0d1a 0%, #000 70%);
             overflow: hidden;
         }
 
-        #countdown-timer {
+        /* --- Estrellas de fondo --- */
+        .star {
             position: absolute;
-            top: 20px;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.9; }
+        }
+
+        /* --- AVION (tercio superior) --- */
+        #plane {
+            position: absolute;
+            top: 14vh;               /* dentro del tercio superior */
+            left: -220px;
+            width: 200px;
+            height: auto;
+            z-index: 6;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+            transform: translateY(0);
+            will-change: left;
+        }
+        .plane-fly {
+            animation: fly-across 6s linear forwards;
+        }
+        @keyframes fly-across {
+            from { left: -220px; }
+            to   { left: calc(100vw + 220px); }
+        }
+
+        /* --- Estela del avion --- */
+        #trail {
+            position: absolute;
+            top: calc(14vh + 34px);
+            left: -220px;
+            height: 4px;
+            width: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 100%);
+            border-radius: 4px;
+            z-index: 5;
+            filter: blur(1px);
+        }
+        .trail-grow {
+            animation: trail-grow 6s linear forwards;
+        }
+        @keyframes trail-grow {
+            from { width: 0; left: -180px; }
+            to   { width: 55vw; left: -180px; }
+        }
+
+        /* --- PAQUETE / IMAGEN QUE CAE --- */
+        #drop {
+            position: absolute;
             left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 12px;
-            display: flex;
-            gap: 20px;
-            font-size: 1.8em;
-            text-align: center;
-            z-index: 20;
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(5px);
+            top: 16vh;
+            width: 70px;
+            height: 70px;
+            margin-left: -35px;
+            z-index: 8;
+            opacity: 0;
+            transform: rotate(0deg) scale(0.25);
+            will-change: transform, top;
         }
-        #countdown-timer > div { display: flex; flex-direction: column; }
-        #countdown-timer .label { font-size: 0.4em; text-transform: uppercase; color: #aaa; }
-
-        #construction-site {
-            position: relative;
-            width: 80vw;
-            height: 80vh;
-            max-width: 1200px;
-            max-height: 800px;
-            background-size: cover;
-            background-position: center;
-            border: 2px solid #444;
-            box-shadow: 0 0 25px rgba(0,0,0,0.6);
-        }
-
-        #image-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
+        #drop img {
             width: 100%;
             height: 100%;
-            display: grid;
-            /* ¡Máxima densidad para un progreso suave! */
-            grid-template-columns: repeat(150, 1fr);
-            grid-template-rows: repeat(150, 1fr);
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 0 25px rgba(255,255,255,0.35);
+            display: block;
+        }
+        .drop-fall {
+            animation: fall-spin 3.4s cubic-bezier(0.45, 0, 0.75, 1) forwards;
+        }
+        @keyframes fall-spin {
+            0% {
+                opacity: 0;
+                top: 16vh;
+                width: 70px; height: 70px; margin-left: -35px;
+                transform: rotate(0deg);
+            }
+            8% {
+                opacity: 1;
+                transform: rotate(120deg);
+            }
+            /* crece mientras cae y gira en sentido horario (varias vueltas) */
+            55% {
+                width: 170px; height: 170px; margin-left: -85px;
+                transform: rotate(1080deg);
+            }
+            88% {
+                top: 40vh;
+                width: 250px; height: 250px; margin-left: -125px;
+                transform: rotate(1620deg);
+            }
+            100% {
+                opacity: 1;
+                top: 38vh;
+                width: 260px; height: 260px; margin-left: -130px;
+                transform: rotate(1800deg);   /* 5 vueltas horarias completas */
+            }
         }
 
-        .tile {
-            background-color: #333;
-            border: 1px solid #2a2a2a;
-            transition: opacity 0.5s ease-in-out;
+        /* rebote suave al aterrizar */
+        .drop-landed {
+            animation: land-bounce 0.9s ease-out forwards;
+        }
+        @keyframes land-bounce {
+            0%   { transform: rotate(1800deg) scale(1); }
+            30%  { transform: rotate(1800deg) scale(1.08, 0.92); }
+            55%  { transform: rotate(1800deg) scale(0.96, 1.04); }
+            100% { transform: rotate(1800deg) scale(1); }
         }
 
-        #counter-container {
+        /* sombra en el suelo */
+        #ground-shadow {
             position: absolute;
-            bottom: -60px;
+            left: 50%;
+            top: calc(38vh + 250px);
+            width: 0;
+            height: 22px;
+            margin-left: 0;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 7;
+            opacity: 0;
+        }
+        .shadow-show { animation: shadow-in 3.4s ease-out forwards; }
+        @keyframes shadow-in {
+            0%, 60% { width: 0; opacity: 0; }
+            100% { width: 300px; opacity: 1; }
+        }
+
+        /* --- MENSAJE DE BIENVENIDA --- */
+        #welcome {
+            position: absolute;
+            top: 22vh;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            text-align: center;
+            z-index: 9;
+            opacity: 0;
+            transition: opacity 1s ease, transform 1s ease;
+            pointer-events: none;
+            width: 90%;
+        }
+        #welcome.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #welcome h1 {
+            margin: 0;
+            font-size: clamp(2rem, 6vw, 4.2rem);
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff5eae, #ffd200, #4de1ff, #ff5eae);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+            text-shadow: 0 2px 20px rgba(255,255,255,0.15);
+        }
+        @keyframes shine {
+            to { background-position: 300% center; }
+        }
+        #welcome p {
+            margin: 8px 0 0;
+            font-size: clamp(1rem, 2.6vw, 1.5rem);
+            color: #e8e8e8;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- CONTADOR REGRESIVO --- */
+        #countdown {
+            position: absolute;
+            bottom: 6vh;
+            left: 50%;
+            transform: translateX(-50%) translateY(40px);
+            display: flex;
+            gap: 14px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        #countdown.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .cd-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 16px;
+            padding: 14px 18px;
+            min-width: 78px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .cd-num {
+            display: block;
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            font-weight: 800;
+            line-height: 1;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .cd-label {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #b9b9c9;
+        }
+        #cd-title {
+            position: absolute;
+            bottom: calc(6vh + 118px);
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 1.5em;
+            z-index: 10;
+            font-size: clamp(0.9rem, 2.4vw, 1.2rem);
+            color: #ffd200;
+            font-weight: 600;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 1s ease;
             text-align: center;
             white-space: nowrap;
-            backdrop-filter: blur(5px);
+        }
+        #cd-title.show { opacity: 1; }
+        #cd-done {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            font-weight: 800;
+            color: #ffd200;
         }
 
-        #builder {
+        /* --- CONFETI --- */
+        .confetti {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            background-image: url('https://media.tenor.com/m2h2s_2a_AcAAAAi/bob-the-builder-hammer.gif');
-            background-size: contain;
-            background-repeat: no-repeat;
-            transition: top 0.1s linear, left 0.1s linear;
-            z-index: 10;
-            transform: translate(-50%, -50%);
-            display: none; /* Oculto hasta que empiece la animación */
+            width: 10px;
+            height: 16px;
+            top: -20px;
+            z-index: 12;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        @media (max-width: 600px) {
+            #plane { width: 130px; }
+            #countdown { gap: 8px; }
+            .cd-box { min-width: 58px; padding: 10px 10px; }
         }
     </style>
 </head>
 <body>
+    <div id="scene">
+        <!-- Avion SVG artesanal, estatico, cruza de izq a der -->
+        <div id="trail"></div>
+        <svg id="plane" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- fuselaje -->
+            <path d="M10 55 Q30 42 90 42 L170 42 Q210 42 232 52 Q212 62 170 62 L90 62 Q30 62 10 55 Z" fill="#f3f4f8" stroke="#c9ccd6" stroke-width="1.5"/>
+            <!-- ventanas -->
+            <circle cx="70" cy="52" r="3.2" fill="#7fd3ff"/>
+            <circle cx="88" cy="52" r="3.2" fill="#7fd3ff"/>
+            <circle cx="106" cy="52" r="3.2" fill="#7fd3ff"/>
+            <circle cx="124" cy="52" r="3.2" fill="#7fd3ff"/>
+            <circle cx="142" cy="52" r="3.2" fill="#7fd3ff"/>
+            <!-- cabina -->
+            <path d="M232 52 Q212 62 170 62 L200 52 Z" fill="#e2004b"/>
+            <!-- ala superior -->
+            <path d="M120 45 L150 12 L172 14 L150 45 Z" fill="#d7dae4"/>
+            <!-- ala inferior -->
+            <path d="M118 60 L138 92 L160 90 L150 60 Z" fill="#c2c6d2"/>
+            <!-- cola -->
+            <path d="M14 55 L2 26 L20 30 L34 50 Z" fill="#e2004b"/>
+        </svg>
 
-    <div id="countdown-timer">
-        <div><span id="days">0</span><span class="label">Días</span></div>
-        <div><span id="hours">0</span><span class="label">Horas</span></div>
-        <div><span id="minutes">0</span><span class="label">Min</span></div>
-        <div><span id="seconds">0</span><span class="label">Seg</span></div>
-    </div>
+        <!-- Sombra en el suelo -->
+        <div id="ground-shadow"></div>
 
-    <div id="construction-site">
-        <div id="image-grid"></div>
-        <div id="builder"></div>
-        <div id="counter-container">
-            Progreso: <span id="progress">0.000</span>%
+        <!-- Imagen que cae -->
+        <div id="drop">
+            <img src="static/img/foto.jfif" alt="Luci">
+        </div>
+
+        <!-- Mensaje -->
+        <div id="welcome">
+            <h1>¡Llegó Luci!</h1>
+            <p>La cuenta regresiva para el gran día</p>
+        </div>
+
+        <!-- Contador -->
+        <div id="cd-title">Faltan para el 17 de octubre de 2026, 09:25 hs (ARG)</div>
+        <div id="countdown">
+            <div class="cd-box"><span class="cd-num" id="cd-days">0</span><span class="cd-label">Días</span></div>
+            <div class="cd-box"><span class="cd-num" id="cd-hours">0</span><span class="cd-label">Horas</span></div>
+            <div class="cd-box"><span class="cd-num" id="cd-mins">0</span><span class="cd-label">Min</span></div>
+            <div class="cd-box"><span class="cd-num" id="cd-secs">0</span><span class="cd-label">Seg</span></div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const imageUrl = 'static/img/foto.jfif';
-            const startDate = new Date('2025-07-08T00:00:00'); // Fecha de inicio del "proyecto"
-            const targetDate = new Date('2025-10-03T00:00:00'); // Fecha final
+    document.addEventListener('DOMContentLoaded', () => {
+        const scene   = document.getElementById('scene');
+        const plane   = document.getElementById('plane');
+        const trail   = document.getElementById('trail');
+        const drop    = document.getElementById('drop');
+        const shadow  = document.getElementById('ground-shadow');
+        const welcome = document.getElementById('welcome');
+        const cdWrap  = document.getElementById('countdown');
+        const cdTitle = document.getElementById('cd-title');
 
-            const site = document.getElementById('construction-site');
-            const grid = document.getElementById('image-grid');
-            const builder = document.getElementById('builder');
-            const progressSpan = document.getElementById('progress');
-            
-            site.style.backgroundImage = `url('${imageUrl}')`;
+        // Fecha objetivo: 17/10/2026 09:25:00 hora estandar Argentina (GMT-3, sin horario de verano)
+        const targetDate = new Date('2026-10-17T09:25:00-03:00');
 
-            const gridStyle = getComputedStyle(grid);
-            const columns = gridStyle.gridTemplateColumns.split(' ').length;
-            const rows = gridStyle.gridTemplateRows.split(' ').length;
-            const totalTiles = columns * rows;
-            
-            let tiles = Array.from({ length: totalTiles }, (_, i) => {
-                const tile = document.createElement('div');
-                tile.classList.add('tile');
-                grid.appendChild(tile);
-                return tile;
-            });
-
-            // Barajar los cuadros para que desaparezcan en orden aleatorio
-            for (let i = tiles.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        /* ---------- Estrellas ---------- */
+        (function makeStars() {
+            const n = 90;
+            for (let i = 0; i < n; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.left = Math.random() * 100 + 'vw';
+                s.style.top  = Math.random() * 100 + 'vh';
+                s.style.animationDelay = (Math.random() * 3) + 's';
+                s.style.transform = `scale(${0.5 + Math.random() * 1.5})`;
+                scene.appendChild(s);
             }
+        })();
 
-            function startConstruction() {
-                const now = new Date();
-                const totalProjectDurationMs = targetDate.getTime() - startDate.getTime();
-                const elapsedMsSinceStart = now.getTime() - startDate.getTime();
+        /* ---------- Secuencia de animacion ---------- */
+        // 1) El avion despega
+        plane.classList.add('plane-fly');
+        trail.classList.add('trail-grow');
 
-                if (elapsedMsSinceStart >= totalProjectDurationMs) {
-                    grid.style.display = 'none'; // Revelar todo si la fecha ya pasó
-                    progressSpan.textContent = '100.000';
-                    return;
-                }
+        // 2) Cuando el avion cruza ~el centro (mitad de los 6s de vuelo), se suelta la imagen
+        const DROP_DELAY = 3000; // ms (avion en el centro)
+        setTimeout(() => {
+            drop.classList.add('drop-fall');
+            shadow.classList.add('shadow-show');
+        }, DROP_DELAY);
 
-                // Calcular y revelar los cuadros que ya deberían estar ocultos
-                const tilesThatShouldBeRevealed = Math.floor(totalTiles * (elapsedMsSinceStart / totalProjectDurationMs));
-                for (let i = 0; i < tilesThatShouldBeRevealed; i++) {
-                    if (tiles.length > 0) tiles.pop().style.opacity = '0';
-                }
-                
-                const remainingTiles = tiles.length;
-                const remainingDurationMs = targetDate.getTime() - now.getTime();
-                if (remainingTiles === 0 || remainingDurationMs <= 0) return;
+        // 3) Al aterrizar (fin de la caida de 3.4s), confeti + contador + mensaje
+        const LAND_TIME = DROP_DELAY + 3400;
+        setTimeout(() => {
+            // Fijar el estado final de la caida con estilos inline (evita que
+            // se pierda al quitar la clase de animacion).
+            drop.classList.remove('drop-fall');
+            drop.style.opacity = '1';
+            drop.style.top = '38vh';
+            drop.style.width = '260px';
+            drop.style.height = '260px';
+            drop.style.marginLeft = '-130px';
+            drop.style.transform = 'rotate(1800deg)';
+            // Rebote de aterrizaje con Web Animations API (no deja fill).
+            drop.animate([
+                { transform: 'rotate(1800deg) scale(1)' },
+                { transform: 'rotate(1800deg) scale(1.08, 0.92)' },
+                { transform: 'rotate(1800deg) scale(0.96, 1.04)' },
+                { transform: 'rotate(1800deg) scale(1)' }
+            ], { duration: 900, easing: 'ease-out' });
+            launchConfetti();
+            welcome.classList.add('show');
+            cdWrap.classList.add('show');
+            cdTitle.classList.add('show');
+            // rafagas extra de confeti
+            setTimeout(launchConfetti, 700);
+            setTimeout(launchConfetti, 1500);
+        }, LAND_TIME);
 
-                builder.style.display = 'block'; // Mostrar al constructor
-                const revealInterval = remainingDurationMs / remainingTiles;
+        /* ---------- Confeti desde los costados ---------- */
+        const COLORS = ['#ff5eae','#ffd200','#4de1ff','#7CFC00','#ff7043','#b388ff','#ffffff','#00e5ff'];
+        function launchConfetti() {
+            const total = 90;
+            for (let i = 0; i < total; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                const fromLeft = i % 2 === 0;
+                const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                c.style.background = color;
+                if (Math.random() > 0.5) c.style.borderRadius = '50%';
+                const startY = 30 + Math.random() * 55;      // vh
+                c.style.top = startY + 'vh';
+                c.style.left = fromLeft ? '-15px' : 'calc(100vw + 15px)';
 
-                function revealTile() {
-                    if (tiles.length > 0) {
-                        const tile = tiles.pop();
-                        tile.style.opacity = '0';
-                        builder.style.left = `${tile.offsetLeft + tile.offsetWidth / 2}px`;
-                        builder.style.top = `${tile.offsetTop + tile.offsetHeight / 2}px`;
-                        
-                        const revealedCount = totalTiles - tiles.length;
-                        const percentage = (revealedCount / totalTiles * 100).toFixed(3);
-                        progressSpan.textContent = percentage;
-                    } else {
-                        clearInterval(revealIntervalId);
-                        builder.style.display = 'none';
-                    }
-                }
-                const revealIntervalId = setInterval(revealTile, revealInterval);
+                // trayectoria hacia el centro y hacia arriba, luego caida
+                const dirX = fromLeft ? 1 : -1;
+                const distX = (35 + Math.random() * 45) * dirX; // vw
+                const riseY = -(10 + Math.random() * 25);       // vh
+                const fallY = 40 + Math.random() * 40;          // vh
+                const rot   = (Math.random() * 720 + 360) * (Math.random() > 0.5 ? 1 : -1);
+                const dur   = 2200 + Math.random() * 1500;
+
+                scene.appendChild(c);
+                c.animate([
+                    { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${distX * 0.6}vw, ${riseY}vh) rotate(${rot*0.4}deg)`, opacity: 1, offset: 0.35 },
+                    { transform: `translate(${distX}vw, ${fallY}vh) rotate(${rot}deg)`, opacity: 0 }
+                ], {
+                    duration: dur,
+                    easing: 'cubic-bezier(0.25, 0.6, 0.3, 1)',
+                    fill: 'forwards'
+                }).onfinish = () => c.remove();
             }
+        }
 
-            function updateCountdown() {
-                const now = new Date();
-                const diff = targetDate.getTime() - now.getTime();
-                if (diff <= 0) {
-                    clearInterval(countdownIntervalId);
-                    return;
-                }
-                document.getElementById('days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24));
-                document.getElementById('hours').textContent = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                document.getElementById('minutes').textContent = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                document.getElementById('seconds').textContent = Math.floor((diff % (1000 * 60)) / 1000);
+        /* ---------- Contador regresivo ---------- */
+        const elD = document.getElementById('cd-days');
+        const elH = document.getElementById('cd-hours');
+        const elM = document.getElementById('cd-mins');
+        const elS = document.getElementById('cd-secs');
+        const pad = (n) => String(n).padStart(2, '0');
+
+        function tick() {
+            const diff = targetDate.getTime() - Date.now();
+            if (diff <= 0) {
+                clearInterval(timer);
+                cdWrap.innerHTML = '<div id="cd-done">🎉 ¡Ya llegó el gran día! 🎉</div>';
+                cdTitle.textContent = '17 de octubre de 2026, 09:25 hs (ARG)';
+                return;
             }
-            
-            updateCountdown();
-            const countdownIntervalId = setInterval(updateCountdown, 1000);
-            startConstruction();
-        });
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            elD.textContent = d;
+            elH.textContent = pad(h);
+            elM.textContent = pad(m);
+            elS.textContent = pad(s);
+        }
+        tick();
+        const timer = setInterval(tick, 1000);
+    });
     </script>
-
 </body>
 </html>
