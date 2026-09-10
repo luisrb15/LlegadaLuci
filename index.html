@@ -131,45 +131,47 @@
         /* ─── CONTADOR ─── */
         #countdown {
             position: absolute;
-            bottom: 5vh;
+            bottom: 6vh;
             left: 50%;
             transform: translateX(-50%) translateY(28px);
             display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
             z-index: 10;
             opacity: 0;
             transition: opacity 0.9s ease, transform 0.9s ease;
-            white-space: nowrap;
         }
         #countdown.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
         .cd-box {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(12, 12, 38, 0.90);
+            border: 1.5px solid rgba(255,255,255,0.38);
             border-radius: 14px;
             padding: clamp(8px,2vw,14px) clamp(10px,2.5vw,18px);
-            min-width: clamp(54px,14vw,80px);
+            min-width: clamp(58px,14vw,82px);
             text-align: center;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
         }
         .cd-num {
             display: block;
-            font-size: clamp(1.3rem, 4.5vw, 2.8rem);
+            font-size: clamp(1.5rem, 5vw, 2.8rem);
             font-weight: 800;
             line-height: 1;
             color: #fff;
+            text-shadow: 0 0 12px rgba(255,255,255,0.35);
             font-variant-numeric: tabular-nums;
         }
         .cd-label {
             display: block;
-            margin-top: 4px;
-            font-size: clamp(0.52rem, 1.6vw, 0.72rem);
+            margin-top: 5px;
+            font-size: clamp(0.6rem, 1.8vw, 0.75rem);
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #b9b9c9;
+            color: #d0d0e8;
+            font-weight: 600;
         }
         #cd-done {
             font-size: clamp(1.2rem, 4vw, 2rem);
@@ -190,18 +192,27 @@
         /* ─── RESPONSIVE ─── */
         @media (max-width: 480px) {
             #plane { width: 125px; }
-            /* A 125px ancho → alto ≈ 52px → fuselaje 52%*52 ≈ 27px */
             #trail {
                 top: calc(12vh + 27px);
                 left: -330px; width: 175px;
             }
+            #countdown {
+                bottom: 10vh;
+                gap: 7px;
+            }
+            .cd-box {
+                min-width: 62px;
+                padding: 10px 10px;
+            }
         }
         @media (min-width: 481px) and (max-width: 768px) {
             #plane { width: 160px; }
-            /* A 160px → alto ≈ 67px → fuselaje 52%*67 ≈ 35px */
             #trail {
                 top: calc(12vh + 35px);
                 left: -410px; width: 220px;
+            }
+            #countdown {
+                bottom: 8vh;
             }
         }
     </style>
