@@ -6,12 +6,9 @@
     <title>Llegada de Luci</title>
     <link rel="icon" href="static/img/favicon.jpg" type="image/jpeg">
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background-color: #000;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
@@ -21,178 +18,146 @@
         #scene {
             position: fixed;
             inset: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100vw; height: 100vh;
             background: radial-gradient(circle at 50% 20%, #0d0d1a 0%, #000 70%);
             overflow: hidden;
         }
 
-        /* --- Estrellas de fondo --- */
+        /* ─── Estrellas ─── */
         .star {
             position: absolute;
-            width: 2px;
-            height: 2px;
+            width: 2px; height: 2px;
             background: #fff;
             border-radius: 50%;
-            opacity: 0.7;
             animation: twinkle 3s infinite ease-in-out;
         }
         @keyframes twinkle {
-            0%, 100% { opacity: 0.2; }
-            50% { opacity: 0.9; }
+            0%,100% { opacity: 0.15; }
+            50%      { opacity: 0.9;  }
         }
 
-        /* --- AVION (tercio superior) --- */
+        /* ─── AVIÓN (tercio superior) ─── */
         #plane {
             position: absolute;
-            top: 14vh;               /* dentro del tercio superior */
-            left: -220px;
-            width: 200px;
+            top: 12vh;
+            left: -230px;
+            width: 210px;
             height: auto;
             z-index: 6;
-            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
-            transform: translateY(0);
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));
             will-change: left;
         }
-        .plane-fly {
-            animation: fly-across 6s linear forwards;
-        }
+        .plane-fly { animation: fly-across 6s linear forwards; }
         @keyframes fly-across {
-            from { left: -220px; }
-            to   { left: calc(100vw + 220px); }
+            from { left: -230px; }
+            to   { left: calc(100vw + 230px); }
         }
 
-        /* --- Estela del avion --- */
+        /* ─── ESTELA ───
+           SVG viewBox=240x100 → a 210px de ancho, alto ≈ 87px.
+           Fuselaje centrado en y=52 → 52%*87 ≈ 45px desde el top.
+           La estela se mueve CON el avión (mismo timing) pegada a su cola. */
         #trail {
             position: absolute;
-            top: calc(14vh + 34px);
-            left: -220px;
+            top: calc(12vh + 45px);
+            left: -520px;
+            width: 290px;
             height: 4px;
-            width: 0;
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 100%);
-            border-radius: 4px;
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0)   0%,
+                rgba(255,255,255,0.7) 55%,
+                rgba(255,255,255,0.4) 100%);
+            border-radius: 3px;
+            filter: blur(1.5px);
             z-index: 5;
-            filter: blur(1px);
+            will-change: left;
         }
-        .trail-grow {
-            animation: trail-grow 6s linear forwards;
-        }
-        @keyframes trail-grow {
-            from { width: 0; left: -180px; }
-            to   { width: 55vw; left: -180px; }
+        .trail-fly { animation: trail-across 6s linear forwards; }
+        @keyframes trail-across {
+            0%   { left: -520px; opacity: 0; }
+            4%   { opacity: 0.95; }
+            85%  { opacity: 0.8; }
+            100% { left: calc(100vw - 60px); opacity: 0.3; }
         }
 
-        /* --- PAQUETE / IMAGEN QUE CAE --- */
+        /* ─── IMAGEN QUE CAE ───
+           SOLO usa transform + opacity → GPU compositor → fluida en todos los dispositivos.
+           NO anima top/width/height/margin (evita reflow = imagen que se detiene). */
         #drop {
             position: absolute;
             left: 50%;
-            top: 16vh;
-            width: 70px;
-            height: 70px;
-            margin-left: -35px;
+            top: 12vh;
+            width:  clamp(220px, 58vmin, 390px);
+            height: clamp(220px, 58vmin, 390px);
+            transform: translateX(-50%) translateY(0vh) scale(0.07) rotate(0deg);
+            transform-origin: center center;
             z-index: 8;
             opacity: 0;
-            transform: rotate(0deg) scale(0.25);
-            will-change: transform, top;
+            will-change: transform, opacity;
         }
         #drop img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             display: block;
         }
+
         .drop-fall {
-            animation: fall-spin 3.4s cubic-bezier(0.45, 0, 0.75, 1) forwards;
+            animation: fall-spin 3.3s cubic-bezier(0.38, 0.01, 0.62, 1) forwards;
         }
         @keyframes fall-spin {
             0% {
                 opacity: 0;
-                top: 16vh;
-                width: 70px; height: 70px; margin-left: -35px;
-                transform: rotate(0deg);
+                transform: translateX(-50%) translateY(0vh)   scale(0.07) rotate(0deg);
             }
-            8% {
+            6% {
                 opacity: 1;
-                transform: rotate(120deg);
+                transform: translateX(-50%) translateY(1.5vh) scale(0.13) rotate(60deg);
             }
-            /* crece mientras cae y gira en sentido horario (varias vueltas) */
-            55% {
-                width: 170px; height: 170px; margin-left: -85px;
-                transform: rotate(1080deg);
+            30% {
+                transform: translateX(-50%) translateY(10vh)  scale(0.40) rotate(660deg);
+            }
+            62% {
+                transform: translateX(-50%) translateY(24vh)  scale(0.80) rotate(1360deg);
             }
             88% {
-                top: 40vh;
-                width: 250px; height: 250px; margin-left: -125px;
-                transform: rotate(1620deg);
+                transform: translateX(-50%) translateY(32vh)  scale(1.06) rotate(1764deg);
             }
             100% {
                 opacity: 1;
-                top: 38vh;
-                width: 260px; height: 260px; margin-left: -130px;
-                transform: rotate(1800deg);   /* 5 vueltas horarias completas */
+                transform: translateX(-50%) translateY(30vh)  scale(1)    rotate(1800deg);
             }
         }
 
-        /* rebote suave al aterrizar */
-        .drop-landed {
-            animation: land-bounce 0.9s ease-out forwards;
-        }
-        @keyframes land-bounce {
-            0%   { transform: rotate(1800deg) scale(1); }
-            30%  { transform: rotate(1800deg) scale(1.08, 0.92); }
-            55%  { transform: rotate(1800deg) scale(0.96, 1.04); }
-            100% { transform: rotate(1800deg) scale(1); }
-        }
-
-        /* sombra en el suelo */
-        #ground-shadow {
-            position: absolute;
-            left: 50%;
-            top: calc(38vh + 250px);
-            width: 0;
-            height: 22px;
-            margin-left: 0;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            transform: translateX(-50%);
-            z-index: 7;
-            opacity: 0;
-        }
-        .shadow-show { animation: shadow-in 3.4s ease-out forwards; }
-        @keyframes shadow-in {
-            0%, 60% { width: 0; opacity: 0; }
-            100% { width: 300px; opacity: 1; }
-        }
-
-        /* --- CONTADOR REGRESIVO --- */
+        /* ─── CONTADOR ─── */
         #countdown {
             position: absolute;
-            bottom: 6vh;
+            bottom: 5vh;
             left: 50%;
-            transform: translateX(-50%) translateY(40px);
+            transform: translateX(-50%) translateY(28px);
             display: flex;
-            gap: 14px;
+            gap: 10px;
             z-index: 10;
             opacity: 0;
-            transition: opacity 1s ease, transform 1s ease;
+            transition: opacity 0.9s ease, transform 0.9s ease;
+            white-space: nowrap;
         }
         #countdown.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
         .cd-box {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 16px;
-            padding: 14px 18px;
-            min-width: 78px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: clamp(8px,2vw,14px) clamp(10px,2.5vw,18px);
+            min-width: clamp(54px,14vw,80px);
             text-align: center;
             backdrop-filter: blur(8px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
         }
         .cd-num {
             display: block;
-            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            font-size: clamp(1.3rem, 4.5vw, 2.8rem);
             font-weight: 800;
             line-height: 1;
             color: #fff;
@@ -200,202 +165,188 @@
         }
         .cd-label {
             display: block;
-            margin-top: 6px;
-            font-size: 0.72rem;
+            margin-top: 4px;
+            font-size: clamp(0.52rem, 1.6vw, 0.72rem);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             color: #b9b9c9;
         }
         #cd-done {
-            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            font-size: clamp(1.2rem, 4vw, 2rem);
             font-weight: 800;
             color: #ffd200;
+            text-align: center;
         }
 
-        /* --- CONFETI --- */
+        /* ─── CONFETI ─── */
         .confetti {
             position: absolute;
-            width: 10px;
-            height: 16px;
-            top: -20px;
+            width: 9px; height: 15px;
             z-index: 12;
             opacity: 0;
             will-change: transform, opacity;
         }
 
-        @media (max-width: 600px) {
-            #plane { width: 130px; }
-            #countdown { gap: 8px; }
-            .cd-box { min-width: 58px; padding: 10px 10px; }
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 480px) {
+            #plane { width: 125px; }
+            /* A 125px ancho → alto ≈ 52px → fuselaje 52%*52 ≈ 27px */
+            #trail {
+                top: calc(12vh + 27px);
+                left: -330px; width: 175px;
+            }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            #plane { width: 160px; }
+            /* A 160px → alto ≈ 67px → fuselaje 52%*67 ≈ 35px */
+            #trail {
+                top: calc(12vh + 35px);
+                left: -410px; width: 220px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="scene">
-        <!-- Avion SVG artesanal, estatico, cruza de izq a der -->
-        <div id="trail"></div>
-        <svg id="plane" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
-            <!-- fuselaje -->
-            <path d="M10 55 Q30 42 90 42 L170 42 Q210 42 232 52 Q212 62 170 62 L90 62 Q30 62 10 55 Z" fill="#f3f4f8" stroke="#c9ccd6" stroke-width="1.5"/>
-            <!-- ventanas -->
-            <circle cx="70" cy="52" r="3.2" fill="#7fd3ff"/>
-            <circle cx="88" cy="52" r="3.2" fill="#7fd3ff"/>
-            <circle cx="106" cy="52" r="3.2" fill="#7fd3ff"/>
-            <circle cx="124" cy="52" r="3.2" fill="#7fd3ff"/>
-            <circle cx="142" cy="52" r="3.2" fill="#7fd3ff"/>
-            <!-- cabina -->
-            <path d="M232 52 Q212 62 170 62 L200 52 Z" fill="#e2004b"/>
-            <!-- ala superior -->
-            <path d="M120 45 L150 12 L172 14 L150 45 Z" fill="#d7dae4"/>
-            <!-- ala inferior -->
-            <path d="M118 60 L138 92 L160 90 L150 60 Z" fill="#c2c6d2"/>
-            <!-- cola -->
-            <path d="M14 55 L2 26 L20 30 L34 50 Z" fill="#e2004b"/>
-        </svg>
+<div id="scene">
 
-        <!-- Sombra en el suelo -->
-        <div id="ground-shadow"></div>
+    <div id="trail"></div>
 
-        <!-- Imagen que cae -->
-        <div id="drop">
-            <img src="static/img/foto.jpg" alt="Luci">
-        </div>
+    <svg id="plane" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 55 Q30 42 90 42 L170 42 Q210 42 232 52 Q212 62 170 62 L90 62 Q30 62 10 55 Z"
+              fill="#f3f4f8" stroke="#c9ccd6" stroke-width="1.5"/>
+        <circle cx="70"  cy="52" r="3.2" fill="#7fd3ff"/>
+        <circle cx="88"  cy="52" r="3.2" fill="#7fd3ff"/>
+        <circle cx="106" cy="52" r="3.2" fill="#7fd3ff"/>
+        <circle cx="124" cy="52" r="3.2" fill="#7fd3ff"/>
+        <circle cx="142" cy="52" r="3.2" fill="#7fd3ff"/>
+        <path d="M232 52 Q212 62 170 62 L200 52 Z" fill="#e2004b"/>
+        <path d="M120 45 L150 12 L172 14 L150 45 Z" fill="#d7dae4"/>
+        <path d="M118 60 L138 92 L160 90 L150 60 Z" fill="#c2c6d2"/>
+        <path d="M14 55 L2 26 L20 30 L34 50 Z" fill="#e2004b"/>
+    </svg>
 
-        <!-- Contador -->
-        <div id="countdown">
-            <div class="cd-box"><span class="cd-num" id="cd-days">0</span><span class="cd-label">Días</span></div>
-            <div class="cd-box"><span class="cd-num" id="cd-hours">0</span><span class="cd-label">Horas</span></div>
-            <div class="cd-box"><span class="cd-num" id="cd-mins">0</span><span class="cd-label">Min</span></div>
-            <div class="cd-box"><span class="cd-num" id="cd-secs">0</span><span class="cd-label">Seg</span></div>
-        </div>
+    <div id="drop">
+        <img src="static/img/foto.jpg" alt="Luci">
     </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const scene   = document.getElementById('scene');
-        const plane   = document.getElementById('plane');
-        const trail   = document.getElementById('trail');
-        const drop    = document.getElementById('drop');
-        const shadow  = document.getElementById('ground-shadow');
-        const cdWrap  = document.getElementById('countdown');
+    <div id="countdown">
+        <div class="cd-box">
+            <span class="cd-num"  id="cd-days">0</span>
+            <span class="cd-label">Días</span>
+        </div>
+        <div class="cd-box">
+            <span class="cd-num"  id="cd-hours">0</span>
+            <span class="cd-label">Horas</span>
+        </div>
+        <div class="cd-box">
+            <span class="cd-num"  id="cd-mins">0</span>
+            <span class="cd-label">Min</span>
+        </div>
+        <div class="cd-box">
+            <span class="cd-num"  id="cd-secs">0</span>
+            <span class="cd-label">Seg</span>
+        </div>
+    </div>
+</div>
 
-        // Fecha objetivo: 17/10/2026 09:25:00 hora estandar Argentina (GMT-3, sin horario de verano)
-        const targetDate = new Date('2026-10-17T09:25:00-03:00');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const scene  = document.getElementById('scene');
+    const plane  = document.getElementById('plane');
+    const trail  = document.getElementById('trail');
+    const drop   = document.getElementById('drop');
+    const cdWrap = document.getElementById('countdown');
 
-        /* ---------- Estrellas ---------- */
-        (function makeStars() {
-            const n = 90;
-            for (let i = 0; i < n; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                s.style.left = Math.random() * 100 + 'vw';
-                s.style.top  = Math.random() * 100 + 'vh';
-                s.style.animationDelay = (Math.random() * 3) + 's';
-                s.style.transform = `scale(${0.5 + Math.random() * 1.5})`;
-                scene.appendChild(s);
-            }
-        })();
+    // 17/10/2026 09:25:00 hora estándar Argentina (GMT-3, sin DST)
+    const targetDate = new Date('2026-10-17T09:25:00-03:00');
 
-        /* ---------- Secuencia de animacion ---------- */
-        // 1) El avion despega
-        plane.classList.add('plane-fly');
-        trail.classList.add('trail-grow');
+    /* Estrellas */
+    for (let i = 0; i < 85; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left            = Math.random() * 100 + 'vw';
+        s.style.top             = Math.random() * 100 + 'vh';
+        s.style.animationDelay  = (Math.random() * 3).toFixed(2) + 's';
+        s.style.transform       = `scale(${(0.6 + Math.random() * 1.5).toFixed(2)})`;
+        scene.appendChild(s);
+    }
 
-        // 2) Cuando el avion cruza ~el centro (mitad de los 6s de vuelo), se suelta la imagen
-        const DROP_DELAY = 3000; // ms (avion en el centro)
-        setTimeout(() => {
-            drop.classList.add('drop-fall');
-            shadow.classList.add('shadow-show');
-        }, DROP_DELAY);
+    /* Arranque: avión + estela */
+    plane.classList.add('plane-fly');
+    trail.classList.add('trail-fly');
 
-        // 3) Al aterrizar (fin de la caida de 3.4s), confeti + contador + mensaje
-        const LAND_TIME = DROP_DELAY + 3400;
-        setTimeout(() => {
-            // Fijar el estado final de la caida con estilos inline (evita que
-            // se pierda al quitar la clase de animacion).
-            drop.classList.remove('drop-fall');
-            drop.style.opacity = '1';
-            drop.style.top = '38vh';
-            drop.style.width = '260px';
-            drop.style.height = '260px';
-            drop.style.marginLeft = '-130px';
-            drop.style.transform = 'rotate(1800deg)';
-            // Rebote de aterrizaje con Web Animations API (no deja fill).
-            drop.animate([
-                { transform: 'rotate(1800deg) scale(1)' },
-                { transform: 'rotate(1800deg) scale(1.08, 0.92)' },
-                { transform: 'rotate(1800deg) scale(0.96, 1.04)' },
-                { transform: 'rotate(1800deg) scale(1)' }
-            ], { duration: 900, easing: 'ease-out' });
-            launchConfetti();
-            cdWrap.classList.add('show');
-            // rafagas extra de confeti
-            setTimeout(launchConfetti, 700);
-            setTimeout(launchConfetti, 1500);
-        }, LAND_TIME);
+    /* El avión cruza el centro a los ~3 s → suelta la imagen */
+    setTimeout(() => drop.classList.add('drop-fall'), 3000);
 
-        /* ---------- Confeti desde los costados ---------- */
-        const COLORS = ['#ff5eae','#ffd200','#4de1ff','#7CFC00','#ff7043','#b388ff','#ffffff','#00e5ff'];
-        function launchConfetti() {
-            const total = 90;
-            for (let i = 0; i < total; i++) {
-                const c = document.createElement('div');
-                c.className = 'confetti';
-                const fromLeft = i % 2 === 0;
-                const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                c.style.background = color;
-                if (Math.random() > 0.5) c.style.borderRadius = '50%';
-                const startY = 30 + Math.random() * 55;      // vh
-                c.style.top = startY + 'vh';
-                c.style.left = fromLeft ? '-15px' : 'calc(100vw + 15px)';
+    /* Aterrizaje a los 3 + 3.3 = 6.3 s */
+    setTimeout(() => {
+        // Fijar posición final sin "snap"
+        drop.classList.remove('drop-fall');
+        drop.style.opacity   = '1';
+        drop.style.transform = 'translateX(-50%) translateY(30vh) scale(1) rotate(1800deg)';
 
-                // trayectoria hacia el centro y hacia arriba, luego caida
-                const dirX = fromLeft ? 1 : -1;
-                const distX = (35 + Math.random() * 45) * dirX; // vw
-                const riseY = -(10 + Math.random() * 25);       // vh
-                const fallY = 40 + Math.random() * 40;          // vh
-                const rot   = (Math.random() * 720 + 360) * (Math.random() > 0.5 ? 1 : -1);
-                const dur   = 2200 + Math.random() * 1500;
+        // Rebote
+        drop.animate([
+            { transform: 'translateX(-50%) translateY(30vh)   scale(1,1)      rotate(1800deg)' },
+            { transform: 'translateX(-50%) translateY(31.2vh) scale(1.07,0.93) rotate(1800deg)' },
+            { transform: 'translateX(-50%) translateY(29.5vh) scale(0.97,1.04) rotate(1800deg)' },
+            { transform: 'translateX(-50%) translateY(30vh)   scale(1,1)      rotate(1800deg)' }
+        ], { duration: 650, easing: 'ease-out', fill: 'forwards' });
 
-                scene.appendChild(c);
-                c.animate([
-                    { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
-                    { transform: `translate(${distX * 0.6}vw, ${riseY}vh) rotate(${rot*0.4}deg)`, opacity: 1, offset: 0.35 },
-                    { transform: `translate(${distX}vw, ${fallY}vh) rotate(${rot}deg)`, opacity: 0 }
-                ], {
-                    duration: dur,
-                    easing: 'cubic-bezier(0.25, 0.6, 0.3, 1)',
-                    fill: 'forwards'
-                }).onfinish = () => c.remove();
-            }
+        launchConfetti();
+        cdWrap.classList.add('show');
+        setTimeout(launchConfetti, 550);
+        setTimeout(launchConfetti, 1300);
+    }, 6300);
+
+    /* Confeti */
+    const COLORS = ['#ff5eae','#ffd200','#4de1ff','#7CFC00','#ff7043','#b388ff','#fff','#00e5ff'];
+    function launchConfetti() {
+        for (let i = 0; i < 75; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            const fromLeft = i % 2 === 0;
+            c.style.background  = COLORS[i % COLORS.length];
+            if (Math.random() > 0.45) c.style.borderRadius = '50%';
+            c.style.top  = (22 + Math.random() * 62) + 'vh';
+            c.style.left = fromLeft ? '-14px' : 'calc(100vw + 14px)';
+            const dx  = (28 + Math.random() * 42) * (fromLeft ? 1 : -1);
+            const ry  = -(7 + Math.random() * 20);
+            const fy  = 32 + Math.random() * 42;
+            const rot = (Math.random() * 720 + 360) * (Math.random() > 0.5 ? 1 : -1);
+            const dur = 1900 + Math.random() * 1400;
+            scene.appendChild(c);
+            c.animate([
+                { transform: `translate(0,0) rotate(0deg)`,                             opacity: 1 },
+                { transform: `translate(${dx*0.55}vw,${ry}vh) rotate(${rot*0.38}deg)`, opacity: 1, offset: 0.32 },
+                { transform: `translate(${dx}vw,${fy}vh) rotate(${rot}deg)`,            opacity: 0 }
+            ], { duration: dur, easing: 'cubic-bezier(0.22,0.6,0.28,1)', fill: 'forwards' })
+            .onfinish = () => c.remove();
         }
+    }
 
-        /* ---------- Contador regresivo ---------- */
-        const elD = document.getElementById('cd-days');
-        const elH = document.getElementById('cd-hours');
-        const elM = document.getElementById('cd-mins');
-        const elS = document.getElementById('cd-secs');
-        const pad = (n) => String(n).padStart(2, '0');
+    /* Contador */
+    const elD = document.getElementById('cd-days');
+    const elH = document.getElementById('cd-hours');
+    const elM = document.getElementById('cd-mins');
+    const elS = document.getElementById('cd-secs');
+    const pad = n => String(n).padStart(2, '0');
 
-        function tick() {
-            const diff = targetDate.getTime() - Date.now();
-            if (diff <= 0) {
-                clearInterval(timer);
-                cdWrap.innerHTML = '<div id="cd-done">🎉 ¡Ya llegó el gran día! 🎉</div>';
-                return;
-            }
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            elD.textContent = d;
-            elH.textContent = pad(h);
-            elM.textContent = pad(m);
-            elS.textContent = pad(s);
+    function tick() {
+        const diff = targetDate.getTime() - Date.now();
+        if (diff <= 0) {
+            clearInterval(timer);
+            cdWrap.innerHTML = '<div id="cd-done">🎉 ¡Ya llegó el gran día! 🎉</div>';
+            return;
         }
-        tick();
-        const timer = setInterval(tick, 1000);
-    });
-    </script>
+        elD.textContent = Math.floor(diff / 86400000);
+        elH.textContent = pad(Math.floor((diff % 86400000) / 3600000));
+        elM.textContent = pad(Math.floor((diff % 3600000)  / 60000));
+        elS.textContent = pad(Math.floor((diff % 60000)    / 1000));
+    }
+    tick();
+    const timer = setInterval(tick, 1000);
+});
+</script>
 </body>
 </html>
